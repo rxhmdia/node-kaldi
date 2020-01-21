@@ -1,0 +1,19 @@
+{
+  "name": "node-kaldi",
+  "version": "1.0.0",
+  "description": "Native module to do ASR using Kaldi NNet3 Online GrammarFST",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-addon-api": "^2.0.0"
+  },
+  "devDependencies": {
+    "glob": "^7.1.6",
+    "wavefile": "^10.4.0"
+  }
+}
