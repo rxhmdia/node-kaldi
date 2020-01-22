@@ -125,10 +125,10 @@ namespace kaldi {
 
         KALDI_LOG << "Creating decoder...";
 
-        decoder            = NULL;
-        // silence_weighting  = NULL;
-        feature_pipeline   = NULL;
-        // adaptation_state   = NULL;
+        decoder            = nullptr;
+        // silence_weighting  = nullptr;
+        feature_pipeline   = nullptr;
+        // adaptation_state   = nullptr;
 
         decodable_info = new nnet3::DecodableNnetSimpleLoopedInfo(model->decodable_opts, &model->am_nnet);
 
@@ -194,18 +194,9 @@ namespace kaldi {
 
     NNet3OnlineDecoderWrapper::~NNet3OnlineDecoderWrapper() {
         free_decoder();
-        if (silence_weighting) {
-            delete silence_weighting ;
-            silence_weighting = NULL;
-        }
-        if (adaptation_state) {
-            delete adaptation_state ;
-            adaptation_state = NULL;
-        }
-        if (decodable_info) {
-            delete decodable_info;
-            decodable_info = NULL;
-        }
+        delete silence_weighting;
+        delete adaptation_state;
+        delete decodable_info;
     }
 
     void NNet3OnlineDecoderWrapper::start_decoding(void) {
@@ -241,15 +232,11 @@ namespace kaldi {
     }
 
     void NNet3OnlineDecoderWrapper::free_decoder(void) {
-        if (decoder) {
-            // KALDI_LOG << "free_decoder";
-            delete decoder ;
-            decoder = NULL;
-        }
-        if (feature_pipeline) {
-            delete feature_pipeline ;
-            feature_pipeline = NULL;
-        }
+        // KALDI_LOG << "free_decoder";
+        delete decoder ;
+        decoder = nullptr;
+        delete feature_pipeline ;
+        feature_pipeline = nullptr;
     }
 
     // Returns:
@@ -265,7 +252,7 @@ namespace kaldi {
         feature_pipeline->AcceptWaveform(samp_freq, wave_part);
 
         // KALDI_LOG << "Wave accepted";
-        if (silence_weighting->Active() && feature_pipeline->IvectorFeature() != NULL) {
+        if (silence_weighting->Active() && feature_pipeline->IvectorFeature()) {
             silence_weighting->ComputeCurrentTraceback(decoder->Decoder());
             silence_weighting->GetDeltaWeights(feature_pipeline->NumFramesReady(),
                                                &delta_weights);
@@ -305,7 +292,7 @@ namespace kaldi {
           text = LatticeToString(lat, *model->word_syms);
 
           // // Confidences
-          MinimumBayesRisk *mbr = NULL;
+          MinimumBayesRisk *mbr = nullptr;
           mbr = new MinimumBayesRisk(lat, mbr_opts);
 
           const int decimals = 5;
