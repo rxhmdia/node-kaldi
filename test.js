@@ -52,5 +52,3 @@ Glob(testsGlob, (err, files) => {
 	d = null
 
 })
-
-module.exports = Kaldi

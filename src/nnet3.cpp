@@ -398,7 +398,7 @@ Napi::Value OnlineNNet3GrammarDecoder::GetResult(const Napi::CallbackInfo& info)
       CompactLattice lat;
       decoder_->GetLattice(true, &lat);
 
-      WriteCompactLattice(std::cout, false, lat);
+      // WriteCompactLattice(std::cout, false, lat);
 
       // Text
       text = LatticeToString(lat, *aModel->word_syms);
