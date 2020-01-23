@@ -5,10 +5,7 @@
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
-        "./src/nnet3.cpp",
-        "./src/model.cpp",
-        "./src/decoder.cpp",
-        "./src/index.cpp"
+        "./src/nnet3.cpp"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

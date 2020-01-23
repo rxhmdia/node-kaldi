@@ -1,114 +1,74 @@
-#ifndef INC_NNET3
-#define INC_NNET3
+#ifndef INC_DECODER
+#define INC_DECODER
 
+#include <napi.h>
 #include "online2/online-nnet3-decoding.h"
 #include "online2/online-nnet2-feature-pipeline.h"
 #include "online2/onlinebin-util.h"
 #include "online2/online-endpoint.h"
 #include "fstext/fstext-lib.h"
 #include "lat/lattice-functions.h"
-#include "lat/confidence.h"
 #include "util/kaldi-thread.h"
 #include "nnet3/nnet-utils.h"
 #include "decoder/grammar-fst.h"
 #include "util/kaldi-table.h"
-#include "lat/sausages.h"
 
-namespace kaldi {
-    class NNet3OnlineModelWrapper {
-    friend class NNet3OnlineDecoderWrapper;
-    public:
+class OnlineNNet3Model : public Napi::ObjectWrap<OnlineNNet3Model> {
+    friend class OnlineNNet3GrammarDecoder;
+	public:
+		static Napi::Object Init(Napi::Env env, Napi::Object exports);
+		OnlineNNet3Model(const Napi::CallbackInfo& info);
+		~OnlineNNet3Model();
 
-        NNet3OnlineModelWrapper(
-              std::string &nnet3_rxfilename,
-              std::string &fst_rxfilename,
-              std::string &word_syms_filename
-        );
-        ~NNet3OnlineModelWrapper();
+	private:
+		static Napi::FunctionReference constructor;
 
-    private:
+        fst::SymbolTable									*word_syms;
 
-        fst::SymbolTable                          *word_syms;
+        kaldi::OnlineNnet2FeaturePipelineConfig				feature_config;
+        kaldi::OnlineNnet2FeaturePipelineInfo				*feature_info;
 
-        OnlineNnet2FeaturePipelineConfig           feature_config;
+        kaldi::nnet3::AmNnetSimple							am_nnet;
+        kaldi::nnet3::NnetSimpleLoopedComputationOptions	decodable_opts;
 
-        OnlineNnet2FeaturePipelineInfo            *feature_info;
+        kaldi::TransitionModel								trans_model;
+        fst::GrammarFst                           			decode_fst;
+};
 
-        nnet3::AmNnetSimple                        am_nnet;
-        nnet3::NnetSimpleLoopedComputationOptions  decodable_opts;
+class OnlineNNet3GrammarDecoder : public Napi::ObjectWrap<OnlineNNet3GrammarDecoder> {
+	public:
+		static Napi::Object Init(Napi::Env env, Napi::Object exports);
+		OnlineNNet3GrammarDecoder(const Napi::CallbackInfo& info);
+		~OnlineNNet3GrammarDecoder();
+		Napi::Value PushChunk(const Napi::CallbackInfo& info);
+		Napi::Value GetResult(const Napi::CallbackInfo& info);
 
-        TransitionModel                            trans_model;
-        fst::GrammarFst                            decode_fst;
-        // std::string                               *ie_conf_filename;
+	private:
+		static Napi::FunctionReference constructor;
 
-        // std::vector<std::vector<int32> >           word_alignment_lexicon;
-    };
+        void StartDecoding(void);
+        void FreeDecoder(void);
+        std::string LatticeToString(const kaldi::Lattice &lat, const fst::SymbolTable &word_syms);
+        std::string LatticeToString(const kaldi::CompactLattice &clat, const fst::SymbolTable &word_syms);
+        double RoundFloat(double number, const int decimals);
 
-
-    class WordResult {
-    public:
-        WordResult(
-            std::string word,
-            BaseFloat confidence
-        );
-
-        std::string getWord();
-        BaseFloat getConfidence();
-
-    private:
-        std::string word_;
-        BaseFloat confidence_;
-    };
-
-    class NNet3OnlineDecoderWrapper {
-    public:
-
-        NNet3OnlineDecoderWrapper(
-            NNet3OnlineModelWrapper *aModel
-        );
-        ~NNet3OnlineDecoderWrapper();
-
-        bool chunk(BaseFloat samp_freq, Vector<BaseFloat> &wave_part);
-
-        void get_result(std::string &text, double &likelihood, double &time, std::vector<WordResult> &word_confidences);
-        // bool               get_word_alignment(std::vector<string> &words,
-        //                                       std::vector<int32>  &times,
-        //                                       std::vector<int32>  &lengths);
-
-    private:
-
-        void start_decoding(void);
-        void free_decoder(void);
-        std::string LatticeToString(const Lattice &lat, const fst::SymbolTable &word_syms);
-        std::string LatticeToString(const CompactLattice &clat, const fst::SymbolTable &word_syms);
-        double RoundFloat(BaseFloat number, int decimals);
+		OnlineNNet3Model											*aModel;
 
         clock_t t;
+        double audio_duration;
 
-        LatticeFasterDecoderConfig                      decoder_opts;
-        OnlineEndpointConfig                            endpoint_opts;
+		kaldi::LatticeFasterDecoderConfig							decoder_opts;
+		kaldi::MinimumBayesRiskOptions 								mbr_opts;
+		kaldi::nnet3::DecodableNnetSimpleLoopedInfo 				*decodable_info;
 
-        OnlineNnet2FeaturePipelineConfig           feature_config;
+		kaldi::OnlineEndpointConfig									endpoint_opts;
+		kaldi::OnlineIvectorExtractorAdaptationState				*adaptation_state;
+		kaldi::OnlineNnet2FeaturePipeline 							*feature_pipeline;
+		kaldi::OnlineSilenceWeighting								*silence_weighting;
 
-        OnlineNnet2FeaturePipelineInfo            *feature_info;
-        OnlineNnet2FeaturePipeline                      *feature_pipeline;
-        nnet3::DecodableNnetSimpleLoopedInfo            *decodable_info;
+		kaldi::SingleUtteranceNnet3DecoderTpl<fst::GrammarFst>		*decoder_;
 
-        NNet3OnlineModelWrapper                         *model;
+		std::vector<std::pair<int32, kaldi::BaseFloat> > 			delta_weights;
+};
 
-        MinimumBayesRiskOptions                         mbr_opts;
-
-        OnlineIvectorExtractorAdaptationState     *adaptation_state;
-        OnlineSilenceWeighting                    *silence_weighting;
-        SingleUtteranceNnet3DecoderTpl<fst::GrammarFst> *decoder;
-
-        std::vector<std::pair<int32, BaseFloat> >  delta_weights;
-        // int32                                      tot_frames, tot_frames_decoded;
-
-        // decoding result:
-        // CompactLattice                             best_path_clat;
-
-    };
-}
-
-#endif /* INC_NNET3 */
+#endif /* INC_DECODER */
