@@ -79,6 +79,11 @@ OnlineNNet3Model::OnlineNNet3Model(const Napi::CallbackInfo& info) : Napi::Objec
     KALDI_LOG << "Loading feature configuration...";
 
     // Apply options
+    if (config.Has("feature_type")) {
+    	feature_config.feature_type = config.Get("feature_type").ToString();
+    }
+
+    // Apply options
     if (config.Has("mfcc_config")) {
     	feature_config.mfcc_config = config.Get("mfcc_config").ToString();
     }
