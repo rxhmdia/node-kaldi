@@ -41,7 +41,6 @@
       ],
       "libraries": [
         "-latlas",
-        '-lfst',
         "/usr/lib/libkaldi-online2.so",
         "/usr/lib/libkaldi-ivector.so",
         "/usr/lib/libkaldi-nnet3.so",
