@@ -1,9 +1,11 @@
-# node-kaldi
+# This repo is obsolete and is not maintained
 
-## Requirements
+## node-kaldi
+
+### Requirements
 
 A compiled version of Kaldi in `/opt/kaldi`.
 
-## Dependencies
+### Dependencies
 
 `apt install apt install libatlas-dev libatlas-base-dev libfst-dev`
